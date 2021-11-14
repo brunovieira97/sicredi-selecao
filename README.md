@@ -1,1 +1,1 @@
-# sicredi-selecao
+# Seleção Sicredi - Dev Back-End
