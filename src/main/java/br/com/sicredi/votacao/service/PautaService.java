@@ -27,6 +27,25 @@ public class PautaService {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	public List<PautaResponseDTO> list() {
+		List<Pauta> pautas = this.pautaRepository.findAll();
+
+		List<PautaResponseDTO> dtos = pautas
+			.stream()
+			.map(p -> this.modelMapper.map(p, PautaResponseDTO.class))
+			.collect(Collectors.toList());
+
+		return dtos;
+	}
+
+	public PautaResponseDTO show(@Valid @Positive Long id) throws ResourceNotFoundException {
+		Pauta pauta = this.pautaRepository
+			.findById(id)
+			.orElseThrow(ResourceNotFoundException::new);
+		
+		return this.modelMapper.map(pauta, PautaResponseDTO.class);
+	}
+
 	public PautaResponseDTO create(@Valid PautaRequestDTO dto) throws ResourceNotFoundException {
 		Pauta pauta = this.modelMapper.map(dto, Pauta.class);
 
@@ -45,25 +64,6 @@ public class PautaService {
 		this.pautaRepository.save(original);
 
 		return this.show(id);
-	}
-
-	public List<PautaResponseDTO> list() {
-		List<Pauta> pautas = this.pautaRepository.findAll();
-
-		List<PautaResponseDTO> dtos = pautas
-			.stream()
-			.map(p -> this.modelMapper.map(p, PautaResponseDTO.class))
-			.collect(Collectors.toList());
-
-		return dtos;
-	}
-
-	public PautaResponseDTO show(@Valid @Positive Long id) throws ResourceNotFoundException {
-		Pauta pauta = this.pautaRepository
-			.findById(id)
-			.orElseThrow(ResourceNotFoundException::new);
-		
-		return this.modelMapper.map(pauta, PautaResponseDTO.class);
 	}
 
 	public void delete(@Valid @Positive Long id) throws ResourceNotFoundException {
