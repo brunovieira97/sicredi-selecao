@@ -18,12 +18,14 @@ import io.restassured.http.ContentType;
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 public class PautaIntegrationTest {
 
+	private static final String BASE_PATH = "/pautas";
+
 	@Test
 	public void listaPautas() {
 
 		List<PautaResponseDTO> pautas = 
 			given()
-				.basePath("/pautas")
+				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
 			.when()
 				.get()
@@ -35,26 +37,12 @@ public class PautaIntegrationTest {
 	}
 
 	@Test
-	public void buscaPautaInexistente() {
-		Long id = 5L;
-
-		given()
-			.basePath("/pautas")
-			.pathParam("id", id)
-			.accept(ContentType.JSON)
-		.when()
-			.get("/{id}")
-		.then()
-			.statusCode(HttpStatus.NO_CONTENT.value());
-	}
-
-	@Test
-	public void buscaPautaExistente() {
+	public void listaPautaPorIdExistente() {
 		Long id = 1L;
 
 		PautaResponseDTO pauta = 
 			given()
-				.basePath("/pautas")
+				.basePath(BASE_PATH)
 				.pathParam("id", id)
 				.accept(ContentType.JSON)
 			.when()
@@ -68,13 +56,27 @@ public class PautaIntegrationTest {
 	}
 
 	@Test
+	public void listaPautaPorIdInexistente() {
+		Long id = 5L;
+
+		given()
+			.basePath(BASE_PATH)
+			.pathParam("id", id)
+			.accept(ContentType.JSON)
+		.when()
+			.get("/{id}")
+		.then()
+			.statusCode(HttpStatus.NO_CONTENT.value());
+	}
+
+	@Test
 	public void cadastraPautaDadosValidos() {
 		PautaRequestDTO pauta = new PautaRequestDTO();
 		pauta.setNome("Teste");
 
 		Long id = 
 			given()
-				.basePath("/pautas")
+				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
 				.contentType(ContentType.JSON)
 				.body(pauta)
@@ -85,7 +87,7 @@ public class PautaIntegrationTest {
 				.extract().body().as(PautaResponseDTO.class).getId();
 
 		given()
-			.basePath("/pautas")
+			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.pathParam("id", id)
@@ -101,7 +103,7 @@ public class PautaIntegrationTest {
 		pauta.setNome(null);
 
 		given()
-			.basePath("/pautas")
+			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.body(pauta)
@@ -118,7 +120,7 @@ public class PautaIntegrationTest {
 
 		PautaResponseDTO pauta = 
 			given()
-				.basePath("/pautas")
+				.basePath(BASE_PATH)
 				.pathParam("id", id)
 				.accept(ContentType.JSON)
 			.when()
@@ -134,7 +136,7 @@ public class PautaIntegrationTest {
 
 		PautaResponseDTO response =
 			given()
-				.basePath("/pautas")
+				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
 				.contentType(ContentType.JSON)
 				.pathParam("id", id)
@@ -155,7 +157,7 @@ public class PautaIntegrationTest {
 
 		PautaResponseDTO pauta = 
 			given()
-				.basePath("/pautas")
+				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
 				.pathParam("id", id)
 			.when()
@@ -170,7 +172,7 @@ public class PautaIntegrationTest {
 		newPauta.setNome(novoNome);
 
 		given()
-			.basePath("/pautas")
+			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.pathParam("id", id)
@@ -182,35 +184,11 @@ public class PautaIntegrationTest {
 	}
 
 	@Test
-	public void excluiPautaInexistente() {
-		Long id = 10L;
-
-		given()
-			.basePath("/pautas")
-			.accept(ContentType.JSON)
-			.contentType(ContentType.JSON)
-			.pathParam("id", id)
-		.when()
-			.delete("/{id}")
-		.then()
-			.statusCode(HttpStatus.NO_CONTENT.value());
-
-		given()
-			.basePath("/pautas")
-			.accept(ContentType.JSON)
-			.pathParam("id", id)
-		.when()
-			.get("/{id}")
-		.then()
-			.statusCode(HttpStatus.NO_CONTENT.value());
-	}
-
-	@Test
 	public void excluiPautaExistente() {
 		Long id = 1L;
 
 		given()
-			.basePath("/pautas")
+			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.pathParam("id", id)
@@ -220,9 +198,33 @@ public class PautaIntegrationTest {
 			.statusCode(HttpStatus.OK.value());
 
 		given()
-			.basePath("/pautas")
+			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
+			.pathParam("id", id)
+		.when()
+			.get("/{id}")
+		.then()
+			.statusCode(HttpStatus.NO_CONTENT.value());
+	}
+
+	@Test
+	public void excluiPautaInexistente() {
+		Long id = 10L;
+
+		given()
+			.basePath(BASE_PATH)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.pathParam("id", id)
+		.when()
+			.delete("/{id}")
+		.then()
+			.statusCode(HttpStatus.NO_CONTENT.value());
+
+		given()
+			.basePath(BASE_PATH)
+			.accept(ContentType.JSON)
 			.pathParam("id", id)
 		.when()
 			.get("/{id}")
