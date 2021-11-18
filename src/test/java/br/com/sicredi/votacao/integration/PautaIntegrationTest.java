@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -20,9 +22,34 @@ public class PautaIntegrationTest {
 
 	private static final String BASE_PATH = "/pautas";
 
+	@BeforeEach
+	public void setup() {
+		this.cadastraPautaDadosValidos();
+	}
+
+	@AfterEach
+	public void cleanup() {
+		given()
+			.basePath(BASE_PATH)
+			.accept(ContentType.JSON)
+		.when()
+			.get()
+		.then()
+			.statusCode(HttpStatus.OK.value())
+			.extract().body().jsonPath().getList("", PautaResponseDTO.class)
+				.forEach(p -> {
+					given()
+						.basePath(BASE_PATH)
+						.accept(ContentType.JSON)
+						.contentType(ContentType.JSON)
+						.pathParam("id", p.getId())
+					.when()
+						.delete("/{id}");
+				});
+	}
+
 	@Test
 	public void listaPautas() {
-
 		List<PautaResponseDTO> pautas = 
 			given()
 				.basePath(BASE_PATH)
@@ -38,7 +65,16 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void listaPautaPorIdExistente() {
-		Long id = 1L;
+		Long id =
+			given()
+				.basePath(BASE_PATH)
+				.accept(ContentType.JSON)
+			.when()
+				.get()
+			.then()
+				.statusCode(HttpStatus.OK.value())
+				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
+					.get(0).getId();
 
 		PautaResponseDTO pauta = 
 			given()
@@ -57,7 +93,7 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void listaPautaPorIdInexistente() {
-		Long id = 5L;
+		Long id = 99999L;
 
 		given()
 			.basePath(BASE_PATH)
@@ -115,8 +151,17 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void atualizaPautaDadosValidos() {
-		Long id = 1L;
 		String novoNome = "Novo nome";
+		Long id = 
+			given()
+				.basePath(BASE_PATH)
+				.accept(ContentType.JSON)
+			.when()
+				.get()
+			.then()
+				.statusCode(HttpStatus.OK.value())
+				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
+					.get(0).getId();
 
 		PautaResponseDTO pauta = 
 			given()
@@ -152,8 +197,17 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void atualizaPautaDadosInvalidos() {
-		Long id = 1L;
 		String novoNome = null;
+		Long id =
+			given()
+				.basePath(BASE_PATH)
+				.accept(ContentType.JSON)
+			.when()
+				.get()
+			.then()
+				.statusCode(HttpStatus.OK.value())
+				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
+					.get(0).getId();
 
 		PautaResponseDTO pauta = 
 			given()
@@ -185,8 +239,17 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void excluiPautaExistente() {
-		Long id = 1L;
-
+		Long id = 
+			given()
+				.basePath(BASE_PATH)
+				.accept(ContentType.JSON)
+			.when()
+				.get()
+			.then()
+				.statusCode(HttpStatus.OK.value())
+				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
+					.get(0).getId();
+		
 		given()
 			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
@@ -210,7 +273,7 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void excluiPautaInexistente() {
-		Long id = 10L;
+		Long id = 99999L;
 
 		given()
 			.basePath(BASE_PATH)

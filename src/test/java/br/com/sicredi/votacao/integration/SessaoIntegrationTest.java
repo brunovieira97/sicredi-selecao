@@ -7,11 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpStatus;
@@ -23,21 +21,18 @@ import br.com.sicredi.votacao.dto.SessaoResponseDTO;
 import io.restassured.http.ContentType;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@TestInstance(Lifecycle.PER_CLASS)
 public class SessaoIntegrationTest {
 	
 	private static final String PATH_PAUTA = "/pautas";
 	private static final String PATH_SESSAO = "/{idPauta}/sessoes";
 	private static final String BASE_PATH = PATH_PAUTA + PATH_SESSAO;
-	private Long idPauta = 0L;
-	private Long idSessao = 0L;
 
-	@BeforeAll
+	@BeforeEach
 	public void setup() {
 		PautaRequestDTO pauta = new PautaRequestDTO();
 		pauta.setNome("Teste");
 
-		this.idPauta = 
+		Long id = 
 			given()
 				.basePath(PATH_PAUTA)
 				.accept(ContentType.JSON)
@@ -49,44 +44,81 @@ public class SessaoIntegrationTest {
 				.statusCode(HttpStatus.CREATED.value())
 				.extract().body().as(PautaResponseDTO.class).getId();
 
-		SessaoRequestDTO sessao = new SessaoRequestDTO();
-		sessao.setDataHoraAbertura(LocalDateTime.now().plusDays(1));
-		sessao.setDataHoraFechamento(LocalDateTime.now().plusDays(2));
-		
-		this.idSessao = 
-			given()
-				.basePath(BASE_PATH)
-				.accept(ContentType.JSON)
-				.contentType(ContentType.JSON)
-				.pathParam("idPauta", this.idPauta)
-				.body(sessao)
-			.when()
-				.post()
-			.then()
-				.statusCode(HttpStatus.CREATED.value())
-				.extract().body().as(SessaoResponseDTO.class).getId();
-	}
-
-	@AfterAll
-	public void excluirPauta() {
 		given()
 			.basePath(PATH_PAUTA)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
-			.pathParam("id", this.idPauta)
+			.pathParam("id", id)
 		.when()
-			.delete("/{id}")
+			.get("/{id}")
 		.then()
 			.statusCode(HttpStatus.OK.value());
+
+		this.cadastraSessaoDadosValidos();
+	}
+
+	@AfterEach
+	public void cleanup() {
+		// Remove sessões via cascade
+		given()
+			.basePath(PATH_PAUTA)
+			.accept(ContentType.JSON)
+		.when()
+			.get()
+		.then()
+			.statusCode(HttpStatus.OK.value())
+			.extract().body().jsonPath().getList("", PautaResponseDTO.class)
+				.forEach(p -> {
+					given()
+						.basePath(PATH_PAUTA)
+						.accept(ContentType.JSON)
+						.contentType(ContentType.JSON)
+						.pathParam("id", p.getId())
+					.when()
+						.delete("/{id}");
+				});
+	}
+
+	private Long getIdPauta() {
+		Long id =
+			given()
+				.basePath(PATH_PAUTA)
+				.accept(ContentType.JSON)
+			.when()
+				.get()
+			.then()
+				.statusCode(HttpStatus.OK.value())
+				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
+					.get(0).getId();
+
+		return id;
+	}
+
+	private Long getIdSessao(Long idPauta) {
+		Long id = 
+			given()
+				.basePath(BASE_PATH)
+				.accept(ContentType.JSON)
+				.pathParam("idPauta", idPauta)
+			.when()
+				.get()
+			.then()
+				.statusCode(HttpStatus.OK.value())
+				.extract().body().jsonPath().getList("", SessaoResponseDTO.class)
+					.get(0).getId();
+
+		return id;
 	}
 
 	@Test
 	public void listaSessoes() {
+		Long idPauta = this.getIdPauta();
+
 		List<SessaoResponseDTO> sessoes = 
 			given()
 				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
-				.pathParam("idPauta", this.idPauta)
+				.pathParam("idPauta", idPauta)
 			.when()
 				.get()
 			.then()
@@ -98,49 +130,55 @@ public class SessaoIntegrationTest {
 
 	@Test
 	public void listaSessaoPorIdExistente() {
+		Long idPauta = this.getIdPauta();
+		Long idSessao = this.getIdSessao(idPauta);
+
 		SessaoResponseDTO sessao = 
 			given()
 				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
-				.pathParam("idPauta", this.idPauta)
-				.pathParam("id", this.idSessao)
+				.pathParam("idPauta", idPauta)
+				.pathParam("idSessao", idSessao)
 			.when()
-				.get("/{id}")
+				.get("/{idSessao}")
 			.then()
 				.statusCode(HttpStatus.OK.value())
 				.extract().body().as(SessaoResponseDTO.class);
 
 		assertNotNull(sessao.getId());
-		assertEquals(this.idSessao, sessao.getId());
+		assertEquals(idSessao, sessao.getId());
 	}
 
 	@Test
 	public void listaSessaoPorIdInexistente() {
-		Long id = 5L;
+		Long idPauta = this.getIdPauta();
+		Long idSessao = 99999L;
 
 		given()
 			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
-			.pathParam("idPauta", this.idPauta)
-			.pathParam("id", id)
+			.pathParam("idPauta", idPauta)
+			.pathParam("idSessao", idSessao)
 		.when()
-			.get("/{id}")
+			.get("/{idSessao}")
 		.then()
 			.statusCode(HttpStatus.NO_CONTENT.value());
 	}
 
 	@Test
 	public void cadastraSessaoDadosValidos() {
+		Long idPauta = this.getIdPauta();
+
 		SessaoRequestDTO sessao = new SessaoRequestDTO();
 		sessao.setDataHoraAbertura(LocalDateTime.now().plusDays(1));
 		sessao.setDataHoraFechamento(sessao.getDataHoraAbertura().plusDays(1));
 
-		Long id = 
+		Long idSessao = 
 			given()
 				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
 				.contentType(ContentType.JSON)
-				.pathParam("idPauta", this.idPauta)
+				.pathParam("idPauta", idPauta)
 				.body(sessao)
 			.when()
 				.post()
@@ -153,15 +191,17 @@ public class SessaoIntegrationTest {
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.pathParam("idPauta", idPauta)
-			.pathParam("id", id)
+			.pathParam("idSessao", idSessao)
 		.when()
-			.get("/{id}")
+			.get("/{idSessao}")
 		.then()
 			.statusCode(HttpStatus.OK.value());
 	}
 
 	@Test
 	public void cadastraSessaoSemDataAbertura() {
+		Long idPauta = this.getIdPauta();
+
 		SessaoRequestDTO sessao = new SessaoRequestDTO();
 		sessao.setDataHoraAbertura(null);
 		sessao.setDataHoraFechamento(LocalDateTime.now().plusDays(1));
@@ -170,7 +210,7 @@ public class SessaoIntegrationTest {
 			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
-			.pathParam("idPauta", this.idPauta)
+			.pathParam("idPauta", idPauta)
 			.body(sessao)
 		.when()
 			.post()
@@ -180,17 +220,19 @@ public class SessaoIntegrationTest {
 
 	@Test
 	public void cadastraSessaoSemDataFechamento() {
+		Long idPauta = this.getIdPauta();
+
 		SessaoRequestDTO sessao = new SessaoRequestDTO();
 		sessao.setDataHoraAbertura(LocalDateTime.now().plusDays(1));
 		
 		LocalDateTime expected = sessao.getDataHoraAbertura().plusMinutes(1);
 
-		Long id = 
+		Long idSessao = 
 			given()
 				.basePath(BASE_PATH)
 				.accept(ContentType.JSON)
 				.contentType(ContentType.JSON)
-				.pathParam("idPauta", this.idPauta)
+				.pathParam("idPauta", idPauta)
 				.body(sessao)
 			.when()
 				.post()
@@ -204,9 +246,9 @@ public class SessaoIntegrationTest {
 				.accept(ContentType.JSON)
 				.contentType(ContentType.JSON)
 				.pathParam("idPauta", idPauta)
-				.pathParam("id", id)
+				.pathParam("idSessao", idSessao)
 			.when()
-				.get("/{id}")
+				.get("/{idSessao}")
 			.then()
 				.statusCode(HttpStatus.OK.value())
 				.extract().body().as(SessaoResponseDTO.class);
@@ -216,6 +258,10 @@ public class SessaoIntegrationTest {
 
 	@Test
 	public void cadastraSessaoComDataAberturaPassada() {
+		Long idPauta = this.getIdPauta();
+
+		System.out.println("PAUTA: " + idPauta.toString());
+
 		SessaoRequestDTO sessao = new SessaoRequestDTO();
 		sessao.setDataHoraAbertura(LocalDateTime.now().minusDays(7));
 
@@ -223,7 +269,7 @@ public class SessaoIntegrationTest {
 			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
-			.pathParam("idPauta", this.idPauta)
+			.pathParam("idPauta", idPauta)
 			.body(sessao)
 		.when()
 			.post()
@@ -233,30 +279,45 @@ public class SessaoIntegrationTest {
 
 	@Test
 	public void excluiSessaoExistente() {
-		given()
-			.basePath(BASE_PATH)
-			.accept(ContentType.JSON)
-			.contentType(ContentType.JSON)
-			.pathParam("idPauta", 1)
-			.pathParam("id", 1)
-		.when()
-			.delete("/{id}")
-		.then()
-			.statusCode(HttpStatus.OK.value());
-	}
-
-	@Test
-	public void excluiSessaoInexistente() {
-		Long id = 10L;
+		Long idPauta = this.getIdPauta();
+		Long idSessao = this.getIdSessao(idPauta);
 
 		given()
 			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.pathParam("idPauta", idPauta)
-			.pathParam("id", id)
+			.pathParam("idSessao", idSessao)
 		.when()
-			.delete("/{id}")
+			.delete("/{idSessao}")
+		.then()
+			.statusCode(HttpStatus.OK.value());
+
+		given()
+			.basePath(BASE_PATH)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.pathParam("idPauta", idPauta)
+			.pathParam("idSessao", idSessao)
+		.when()
+			.get("/{idSessao}")
+		.then()
+			.statusCode(HttpStatus.NO_CONTENT.value());
+	}
+
+	@Test
+	public void excluiSessaoInexistente() {
+		Long idPauta = this.getIdPauta();
+		Long idSessao = 99999L;
+
+		given()
+			.basePath(BASE_PATH)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.pathParam("idPauta", idPauta)
+			.pathParam("idSessao", idSessao)
+		.when()
+			.delete("/{idSessao}")
 		.then()
 			.statusCode(HttpStatus.NO_CONTENT.value());
 
@@ -264,9 +325,9 @@ public class SessaoIntegrationTest {
 			.basePath(BASE_PATH)
 			.accept(ContentType.JSON)
 			.pathParam("idPauta", idPauta)
-			.pathParam("id", id)
+			.pathParam("idSessao", idSessao)
 		.when()
-			.get("/{id}")
+			.get("/{idSessao}")
 		.then()
 			.statusCode(HttpStatus.NO_CONTENT.value());
 	}
