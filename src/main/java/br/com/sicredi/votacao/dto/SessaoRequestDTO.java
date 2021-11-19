@@ -3,7 +3,6 @@ package br.com.sicredi.votacao.dto;
 import java.time.LocalDateTime;
 
 import javax.validation.constraints.Future;
-import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.lang.Nullable;
@@ -11,7 +10,6 @@ import org.springframework.lang.Nullable;
 public class SessaoRequestDTO {
 	
 	@NotNull
-	@FutureOrPresent
 	private LocalDateTime dataHoraAbertura;
 
 	@Nullable
@@ -25,6 +23,18 @@ public class SessaoRequestDTO {
 	}
 
 	public void setDataHoraAbertura(LocalDateTime dataHoraAbertura) {
+		if (
+			(
+				dataHoraAbertura != null
+				&& dataHoraFechamento != null
+			) && (
+				dataHoraAbertura.isBefore(this.getDataHoraFechamento())
+				|| dataHoraAbertura.isEqual(this.getDataHoraFechamento())
+			)
+		) {
+			throw new IllegalArgumentException();
+		}
+
 		this.dataHoraAbertura = dataHoraAbertura;
 	}
 

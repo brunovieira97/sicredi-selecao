@@ -75,7 +75,10 @@ public class Sessao {
 
 	private void setupDataHoraFechamento() {
 		if (this.getDataHoraFechamento() == null) {
-			LocalDateTime fechamento = this.getDataHoraAbertura().plusMinutes(1L);
+			LocalDateTime fechamento = this.getDataHoraAbertura().plusMinutes(1);
+
+			if (LocalDateTime.now().plusMinutes(1).isAfter(fechamento))
+				fechamento = LocalDateTime.now().plusMinutes(1);
 			
 			this.setDataHoraFechamento(fechamento);
 		}
@@ -94,6 +97,18 @@ public class Sessao {
 	}
 
 	public void setDataHoraAbertura(LocalDateTime dataHoraAbertura) {
+		if (
+			(
+				dataHoraAbertura != null
+				&& dataHoraFechamento != null
+			) && (
+				dataHoraAbertura.isAfter(this.getDataHoraFechamento())
+				|| dataHoraAbertura.isEqual(this.getDataHoraFechamento())
+			)
+		) {
+			throw new IllegalArgumentException();
+		}
+
 		this.dataHoraAbertura = dataHoraAbertura;
 	}
 
