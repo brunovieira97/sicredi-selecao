@@ -126,3 +126,47 @@
 
 // 200 OK
 ```
+
+## Votos da Sessão
+
+### Listar todos
+
+```json
+// GET /pautas/{idPauta}/sessoes/{idSessao}/votos
+
+// 200 OK
+[
+	{
+		"id": 1,
+		"cpfAssociado": 01234567890,
+		// S -> Sim
+		// N -> Não
+		"voto": "S"
+	}
+	...
+]
+```
+
+### Listar por ID
+
+```json
+// GET /pautas/{idPauta}/sessoes/{idSessao}/votos/{idVoto}
+
+// 200 OK
+{
+	"id": 1,
+	"cpfAssociado": 01234567890,
+	"voto": "S"
+}
+```
+
+### Incluir
+
+```json
+// POST /pautas/{id}/sessoes/{id}/votos
+// 201 Created
+{
+	"cpfAssociado": 01234567890,
+	"voto": "S"
+}
+```
