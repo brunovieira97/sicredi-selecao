@@ -1,6 +1,7 @@
 package br.com.sicredi.votacao.service;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -10,10 +11,15 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestTemplate;
 
+import br.com.sicredi.votacao.dto.AbleToVoteDTO;
+import br.com.sicredi.votacao.dto.SessaoResultadoResponseDTO;
 import br.com.sicredi.votacao.dto.VotoRequestDTO;
 import br.com.sicredi.votacao.dto.VotoResponseDTO;
 import br.com.sicredi.votacao.enumerator.SessaoStatus;
+import br.com.sicredi.votacao.enumerator.ValorVoto;
+import br.com.sicredi.votacao.exception.AssociadoInaptoException;
 import br.com.sicredi.votacao.exception.ResourceNotFoundException;
 import br.com.sicredi.votacao.exception.SessaoFechadaException;
 import br.com.sicredi.votacao.exception.VotoJaRegistradoException;
@@ -35,7 +41,11 @@ public class VotoService {
 	@Autowired
 	private ModelMapper modelMapper;
 
-	public List<VotoResponseDTO> list(@Valid @Positive Long idPauta, @Valid @Positive Long idSessao) {
+	public List<VotoResponseDTO> list(@Valid @Positive Long idPauta, @Valid @Positive Long idSessao) throws ResourceNotFoundException {
+		this.sessaoRepository
+			.findByIdAndPautaId(idSessao, idPauta)
+			.orElseThrow(ResourceNotFoundException::new);
+
 		List<Voto> votos = this.votoRepository.findBySessaoPautaIdAndSessaoId(idPauta, idSessao);
 
 		List<VotoResponseDTO> dtos = votos
@@ -63,6 +73,10 @@ public class VotoService {
 		@Valid @Positive Long idSessao,
 		@Valid VotoRequestDTO dto
 	) throws ResourceNotFoundException {
+		if (!this.associadoPodeVotar(dto.getCpfAssociado())) {
+			throw new AssociadoInaptoException();
+		}
+		
 		if (
 			this.votoRepository
 			.findBySessaoPautaIdAndSessaoIdAndCpfAssociado(idPauta, idSessao, dto.getCpfAssociado())
@@ -86,6 +100,39 @@ public class VotoService {
 		Long id = this.votoRepository.save(voto).getId();
 
 		return this.show(idPauta, idSessao, id);
+	}
+
+	public SessaoResultadoResponseDTO resultado(
+		@Valid @Positive Long idPauta,
+		@Valid @Positive Long id
+	) throws ResourceNotFoundException {
+		AtomicInteger simCount = new AtomicInteger(0);
+		AtomicInteger naoCount = new AtomicInteger(0);
+
+		List<VotoResponseDTO> votos = this.list(idPauta, id);
+
+		votos.forEach(v -> {
+			if (v.getVoto().equals(ValorVoto.SIM)) {
+				simCount.incrementAndGet();
+			} else {
+				naoCount.incrementAndGet();
+			}
+		});
+
+		SessaoResultadoResponseDTO response = new SessaoResultadoResponseDTO();
+		response.setSim(simCount.get());
+		response.setNao(naoCount.get());
+
+		return response;
+	}
+
+	private Boolean associadoPodeVotar(String cpf) {
+		final String url = "https://user-info.herokuapp.com/users/" + cpf;
+
+		RestTemplate restTemplate = new RestTemplate();
+		AbleToVoteDTO response = restTemplate.getForObject(url, AbleToVoteDTO.class);
+
+		return response.getStatus().equals("ABLE_TO_VOTE");
 	}
 
 }
