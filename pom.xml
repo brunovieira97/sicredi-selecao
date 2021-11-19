@@ -19,6 +19,7 @@
 		<java.version>11</java.version>
 		<modelmapper.version>2.4.2</modelmapper.version>
 		<rest-assured.version>4.4.0</rest-assured.version>
+		<openapi.version>1.5.5</openapi.version>
 	</properties>
 	
 	<dependencies>
@@ -60,6 +61,11 @@
 			<artifactId>rest-assured</artifactId>
 			<version>${rest-assured.version}</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>${openapi.version}</version>
 		</dependency>
 	</dependencies>
 

@@ -127,6 +127,19 @@
 // 200 OK
 ```
 
+### Resultado da sessão
+
+```json
+// GET /pautas/{idPauta}/sessoes/{idSessao}/resultado
+
+// 200 OK
+{
+	"sim": 10,
+	"nao": 5
+}
+```
+
+
 ## Votos da Sessão
 
 ### Listar todos
