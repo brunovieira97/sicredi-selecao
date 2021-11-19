@@ -24,6 +24,8 @@ Tarefas bônus:
 Foi utilizado Swagger para documentar todos os endpoints disponíveis.
 É possível acessá-lo através da URL `http://localhost:8080/swagger-ui.html`.
 
+A especificação das requisições e respostas REST pode ser lida em [REST.md](REST.md).
+
 ## O que foi utilizado
 
 As seguintes decisões foram feitas quanto à stack:
