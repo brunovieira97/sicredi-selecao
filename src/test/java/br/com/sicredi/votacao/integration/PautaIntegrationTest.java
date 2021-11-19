@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 
 import br.com.sicredi.votacao.dto.PautaRequestDTO;
 import br.com.sicredi.votacao.dto.PautaResponseDTO;
+import br.com.sicredi.votacao.integration.util.IntegrationTestUtils;
 import io.restassured.http.ContentType;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
@@ -65,16 +66,7 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void listaPautaPorIdExistente() {
-		Long id =
-			given()
-				.basePath(BASE_PATH)
-				.accept(ContentType.JSON)
-			.when()
-				.get()
-			.then()
-				.statusCode(HttpStatus.OK.value())
-				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
-					.get(0).getId();
+		Long id = IntegrationTestUtils.getIdPauta();
 
 		PautaResponseDTO pauta = 
 			given()
@@ -152,16 +144,7 @@ public class PautaIntegrationTest {
 	@Test
 	public void atualizaPautaDadosValidos() {
 		String novoNome = "Novo nome";
-		Long id = 
-			given()
-				.basePath(BASE_PATH)
-				.accept(ContentType.JSON)
-			.when()
-				.get()
-			.then()
-				.statusCode(HttpStatus.OK.value())
-				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
-					.get(0).getId();
+		Long id = IntegrationTestUtils.getIdPauta();
 
 		PautaResponseDTO pauta = 
 			given()
@@ -198,16 +181,7 @@ public class PautaIntegrationTest {
 	@Test
 	public void atualizaPautaDadosInvalidos() {
 		String novoNome = null;
-		Long id =
-			given()
-				.basePath(BASE_PATH)
-				.accept(ContentType.JSON)
-			.when()
-				.get()
-			.then()
-				.statusCode(HttpStatus.OK.value())
-				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
-					.get(0).getId();
+		Long id = IntegrationTestUtils.getIdPauta();
 
 		PautaResponseDTO pauta = 
 			given()
@@ -239,16 +213,7 @@ public class PautaIntegrationTest {
 
 	@Test
 	public void excluiPautaExistente() {
-		Long id = 
-			given()
-				.basePath(BASE_PATH)
-				.accept(ContentType.JSON)
-			.when()
-				.get()
-			.then()
-				.statusCode(HttpStatus.OK.value())
-				.extract().body().jsonPath().getList("", PautaResponseDTO.class)
-					.get(0).getId();
+		Long id = IntegrationTestUtils.getIdPauta();
 		
 		given()
 			.basePath(BASE_PATH)
