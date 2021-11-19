@@ -1,6 +1,7 @@
 package br.com.sicredi.votacao.model;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -9,10 +10,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 import javax.validation.constraints.Future;
-import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.data.annotation.Transient;
@@ -28,7 +29,6 @@ public class Sessao {
 	private Long id;
 
 	@NotNull
-	@FutureOrPresent
 	private LocalDateTime dataHoraAbertura;
 
 	@Nullable
@@ -39,11 +39,17 @@ public class Sessao {
 	private transient SessaoStatus status;
 
 	@ManyToOne(
-		cascade = CascadeType.REMOVE,
 		optional = false,
 		fetch = FetchType.LAZY
 	)
 	private Pauta pauta;
+
+	@OneToMany(
+		cascade = CascadeType.REMOVE,
+		fetch = FetchType.LAZY,
+		mappedBy = "sessao"
+	)
+	private Set<Voto> votos;
 
 	public Sessao() {}
 
@@ -123,6 +129,14 @@ public class Sessao {
 
 	public void setPauta(Pauta pauta) {
 		this.pauta = pauta;
+	}
+
+	public Set<Voto> getVotos() {
+		return votos;
+	}
+
+	public void setVotos(Set<Voto> votos) {
+		this.votos = votos;
 	}
 
 }
