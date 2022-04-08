@@ -4,7 +4,7 @@
 
 ### Listar todas
 
-```json
+```jsonc
 // GET /pautas
 
 // 200 OK
@@ -19,7 +19,7 @@
 
 ### Listar por ID
 
-```json
+```jsonc
 // GET /pautas/{id}
 
 // 200 OK
@@ -31,7 +31,7 @@
 
 ### Cadastrar
 
-```json
+```jsonc
 // POST /pautas
 {
 	"nome": "Nome da Pauta"
@@ -46,7 +46,7 @@
 
 ### Atualizar
 
-```json
+```jsonc
 // PUT /pautas/{id}
 {
 	"nome": "Novo nome"
@@ -61,7 +61,7 @@
 
 ### Excluir
 
-```json
+```jsonc
 // DELETE /pautas/{id}
 // 200 OK
 ```
@@ -70,7 +70,7 @@
 
 ### Listar todas (da Pauta)
 
-```json
+```jsonc
 // GET /pautas/{idPauta}/sessoes
 
 // 200 OK
@@ -89,7 +89,7 @@
 
 ### Listar por ID
 
-```json
+```jsonc
 // GET /pautas/{idPauta}/sessoes/{idSessao}
 
 // 200 OK
@@ -103,7 +103,7 @@
 
 ### Cadastrar
 
-```json
+```jsonc
 // POST /pautas/{idPauta}/sessoes
 {
 	"dataHoraAbertura": "2018-09-16T08:00:00",
@@ -121,7 +121,7 @@
 
 ### Deletar
 
-```json
+```jsonc
 // DELETE /pautas/{idPauta}/sessoes/{idSessao}
 
 // 200 OK
@@ -129,7 +129,7 @@
 
 ### Resultado da sessão
 
-```json
+```jsonc
 // GET /pautas/{idPauta}/sessoes/{idSessao}/resultado
 
 // 200 OK
@@ -144,7 +144,7 @@
 
 ### Listar todos
 
-```json
+```jsonc
 // GET /pautas/{idPauta}/sessoes/{idSessao}/votos
 
 // 200 OK
@@ -162,7 +162,7 @@
 
 ### Listar por ID
 
-```json
+```jsonc
 // GET /pautas/{idPauta}/sessoes/{idSessao}/votos/{idVoto}
 
 // 200 OK
@@ -175,7 +175,7 @@
 
 ### Incluir
 
-```json
+```jsonc
 // POST /pautas/{id}/sessoes/{id}/votos
 // 201 Created
 {
