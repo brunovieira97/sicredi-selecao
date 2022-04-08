@@ -21,7 +21,7 @@ Para fins de exercício, a segurança das interfaces pode ser abstraída e qualq
 		- GET [https://user-info.herokuapp.com/users/{cpf}](https://user-info.herokuapp.com/users/{cpf})
 		- Caso o CPF seja inválido, a API retornará o HTTP Status 404 (Not found). Você pode usar geradores de CPF para gerar CPFs válidos
 		- Caso o CPF seja válido, a API retornará se o usuário pode (`ABLE_TO_VOTE`) ou não pode (`UNABLE_TO_VOTE`) executar a operação
-		```json
+		```jsonc
 		// GET /users/19839091069
 		// 200 OK
 		{
